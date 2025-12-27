@@ -1,36 +1,20 @@
-import axios from 'axios';
-import Cookies from 'js-cookie';
+import axios from "axios";
+import Cookies from "js-cookie";
 
 const api = axios.create({
-  baseURL: '',
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json'
-  }
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = Cookies.get('adminToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+api.interceptors.request.use((config) => {
+  const userToken = Cookies.get("userToken");
+  const adminToken = Cookies.get("adminToken");
 
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      Cookies.remove('adminToken');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
+  if (adminToken) {
+    config.headers.Authorization = `Bearer ${adminToken}`;
+  } else if (userToken) {
+    config.headers.Authorization = `Bearer ${userToken}`;
   }
-);
+  return config;
+});
 
 export default api;

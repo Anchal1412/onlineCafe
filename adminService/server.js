@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const passport = require('passport');
 const cookieParser = require('cookie-parser');
+const logger = require('./middleware/logger');
 
 dotenv.config();
 
@@ -19,6 +20,9 @@ app.use(cors({
 
 app.use(express.json());
 app.use(cookieParser());
+
+// Add logger middleware
+app.use(logger);
 
 // Passport initialization
 require('./config/passport');

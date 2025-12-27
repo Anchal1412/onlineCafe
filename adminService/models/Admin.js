@@ -13,7 +13,12 @@ const adminSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true
+    required: true,
+    minLength: 6
+  },
+  profile: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'AdminProfile'
   }
 }, { timestamps: true });
 
