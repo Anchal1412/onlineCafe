@@ -1,33 +1,33 @@
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
-const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const Stripe = require('stripe');
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
+
+// Stripe requires the webhook route to receive the raw body. We'll mount
+// the webhook route before the JSON body parser.
+const { handleWebhook } = require('./controllers/paymentController');
+app.post('/webhook', express.raw({ type: 'application/json' }), handleWebhook);
+
+// parse JSON for regular routes
 app.use(express.json());
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.log(err));
-
-// Stripe Integration
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-
-app.post('/create-payment-intent', async (req, res) => {
-  const { amount } = req.body;
-
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: amount * 100, // Convert to cents
-    currency: 'usd',
-  });
-
-  res.send({ clientSecret: paymentIntent.client_secret });
+// Attach payment routes
+const paymentRoutes = require('./routes/paymentRoutes');
+app.use('/api/payments', paymentRoutes);
+app.post('/api/payments/test', (req, res) => {
+  console.log('✅ test route hit');
+  res.json({ test: 'working' });
 });
+
+
+// simple health
+app.get('/', (req, res) => res.send({ service: 'paymentService', status: 'ok' }));
 
 const PORT = process.env.PORT || 5004;
 app.listen(PORT, () => console.log(`Payment Service running on port ${PORT}`));
